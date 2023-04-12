@@ -1,0 +1,35 @@
+version: '3.1'
+
+services:
+
+  db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: db-pass
+      MYSQL_DATABASE: testbeatdev
+    ports:
+      - '3306:3306'
+
+  private-service:
+    image: privateservice:0.0.1
+    build: ./private-service
+    container_name: private-service
+    restart: always
+    networks:
+      - project-network
+    ports:
+      - "8082:8082"
+    depends_on:
+      - cloud-config
+      - kafka-broker
+      - db-private
+      - eureka-server
+    environment:
+      - DB_URL=jdbc:postgresql://db-private:5432/db_private
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - KAFKA_SERVERS=kafka-broker:29092
+      - CLOUD_URI=http://cloud-config:8888
+      - EUREKA-URL=http://eureka-server:8761/eureka
